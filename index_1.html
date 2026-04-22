@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oussama Ben Hadj Dahman | Cybersecurity Engineer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050508;
+      --bg-panel: rgba(12, 18, 28, 0.75);
+      --neon-green: #00ff41;
+      --neon-cyan: #00f3ff;
+      --neon-purple: #b026ff;
+      --neon-pink: #ff26b0;
+      --text-primary: #e0e0e0;
+      --text-secondary: #8a9ba8;
+      --border: rgba(0, 243, 255, 0.3);
+      --glow-cyan: 0 0 10px var(--neon-cyan), 0 0 20px rgba(0, 243, 255, 0.3);
+      --glow-green: 0 0 10px var(--neon-green), 0 0 20px rgba(0, 255, 65, 0.3);
+      --glow-purple: 0 0 10px var(--neon-purple), 0 0 20px rgba(176, 38, 255, 0.3);
+      --font-head: 'Orbitron', sans-serif;
+      --font-body: 'Fira Code', monospace;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      line-height: 1.6;
+      overflow-x: hidden;
+      position: relative;
+      cursor: none;
+    }
+
+    /* Custom Cursor */
+    .cursor-dot, .cursor-outline {
+      position: fixed; pointer-events: none; z-index: 9999; border-radius: 50%;
+      transition: transform 0.1s ease;
+    }
+    .cursor-dot {
+      width: 8px; height: 8px; background: var(--neon-cyan);
+      box-shadow: 0 0 20px var(--neon-cyan);
+    }
+    .cursor-outline {
+      width: 40px; height: 40px; border: 2px solid var(--neon-green);
+      box-shadow: 0 0 15px var(--neon-green);
+      transition: all 0.2s ease-out;
+    }
+    .cursor-outline.hover {
+      transform: scale(1.5); border-color: var(--neon-purple);
+      box-shadow: 0 0 25px var(--neon-purple);
+      background: rgba(176, 38, 255, 0.1);
+    }
+
+    /* Matrix Canvas & Scanlines */
+    #matrix { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.12; pointer-events: none; }
+    .scanlines {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px);
+      pointer-events: none; z-index: -1;
+    }
+    .glitch-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(45deg, rgba(0,255,65,0.03) 0%, rgba(0,243,255,0.03) 50%, rgba(176,38,255,0.03) 100%);
+      pointer-events: none; z-index: -1;
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+
+    /* Typography & Globals */
+    h1, h2, h3 { font-family: var(--font-head); text-transform: uppercase; letter-spacing: 2px; }
+    h2 { 
+      font-size: 2rem; margin-bottom: 1.5rem; color: var(--neon-cyan); 
+      text-shadow: var(--glow-cyan); display: flex; align-items: center; gap: 10px;
+      position: relative;
+    }
+    h2::before { content: '> '; color: var(--neon-green); animation: blinkText 2s infinite; }
+    p { color: var(--text-secondary); margin-bottom: 1rem; }
+    a { 
+      color: var(--neon-cyan); text-decoration: none; transition: var(--transition); 
+      border-bottom: 1px dashed var(--neon-cyan); cursor: none;
+    }
+    a:hover { color: var(--neon-green); border-bottom-style: solid; text-shadow: var(--glow-green); }
+
+    /* Navigation */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      background: rgba(5, 5, 8, 0.85); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem 5%;
+      transform: translateY(-100%);
+      animation: slideDown 0.6s ease forwards;
+    }
+    .logo { 
+      font-family: var(--font-head); font-weight: 900; font-size: 1.2rem; 
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      position: relative;
+    }
+    .logo::after {
+      content: ''; position: absolute; bottom: -5px; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      transform: scaleX(0); transition: transform 0.3s ease; transform-origin: right;
+    }
+    .logo:hover::after { transform: scaleX(1); transform-origin: left; }
+    
+    .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+    .nav-links a { 
+      font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;
+      position: relative; padding: 5px 0;
+    }
+    .nav-links a::before {
+      content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px;
+      background: var(--neon-purple); transform: scaleX(0);
+      transition: transform 0.3s ease; transform-origin: right;
+    }
+    .nav-links a:hover::before { transform: scaleX(1); transform-origin: left; }
+
+    .menu-toggle {
+      display: none; flex-direction: column; gap: 6px;
+      background: none; border: none; cursor: none; padding: 10px;
+    }
+    .menu-toggle span {
+      width: 30px; height: 2px; background: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan); transition: var(--transition);
+    }
+    
+    @media(max-width: 768px) {
+      .menu-toggle { display: flex; }
+      .nav-links {
+        display: none; position: absolute; top: 100%; left: 0; right: 0;
+        background: rgba(5, 5, 8, 0.95); backdrop-filter: blur(10px);
+        flex-direction: column; padding: 2rem; text-align: center;
+        border-bottom: 1px solid var(--border);
+      }
+      .nav-links.active { display: flex; }
+      nav { padding: 1rem 3%; }
+    }
+
+    /* Layout */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 5%; }
+    section { padding: 5rem 0; opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease, transform 0.6s ease; }
+    section.visible { opacity: 1; transform: translateY(0); }
+
+    /* Hero Section */
+    #hero {
+      min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
+      background: radial-gradient(circle at center, rgba(0,243,255,0.05) 0%, transparent 70%);
+      position: relative;
+    }
+    #hero::before {
+      content: ''; position: absolute; width: 100%; height: 100%;
+      background: repeating-linear-gradient(90deg, transparent 0px, rgba(0,255,65,0.02) 1px, transparent 2px);
+      pointer-events: none;
+    }
+    .hero-title {
+      font-size: clamp(2rem, 6vw, 4.5rem); margin-bottom: 1rem;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan), var(--neon-purple), var(--neon-pink));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      animation: glitchText 3s infinite;
+      position: relative;
+    }
+    .hero-sub {
+      font-size: clamp(1rem, 2.5vw, 1.5rem); color: var(--neon-green); 
+      min-height: 1.6em; text-shadow: var(--glow-green);
+    }
+    .cursor { 
+      display: inline-block; width: 10px; height: 1.2em; background: var(--neon-cyan); 
+      margin-left: 5px; animation: blink 1s step-end infinite; box-shadow: var(--glow-cyan);
+    }
+    .contact-bar { 
+      margin-top: 2rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; 
+      font-size: 0.9rem; padding: 1rem; background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border); border-radius: 8px;
+      backdrop-filter: blur(5px);
+    }
+    .contact-bar span { display: flex; align-items: center; gap: 5px; }
+
+    /* ── HORIZONTAL STATS DASHBOARD (FIXED) ── */
+    .stats-dashboard {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem;
+      margin: 2.5rem 0; padding: 1rem;
+      width: 100%; max-width: 1000px;
+    }
+    .stat-card {
+      flex: 1 1 180px; min-width: 150px; max-width: 220px;
+      background: var(--bg-panel); border: 1px solid var(--border);
+      padding: 1.2rem 1rem; border-radius: 8px; text-align: center;
+      backdrop-filter: blur(8px); transition: var(--transition);
+      animation: borderPulse 3s infinite;
+    }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: var(--glow-cyan); }
+    .stat-number {
+      font-size: 2.2rem; font-weight: bold; font-family: var(--font-head);
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      line-height: 1.2;
+    }
+    .stat-label { color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.4rem; letter-spacing: 1px; }
+
+    /* Cards & Glassmorphism */
+    .grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+    .card {
+      background: var(--bg-panel); border: 1px solid var(--border);
+      backdrop-filter: blur(8px); padding: 1.5rem; border-radius: 8px;
+      transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .card:hover { transform: translateY(-5px) scale(1.02); border-color: var(--neon-cyan); box-shadow: var(--glow-cyan); }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+      background: linear-gradient(to bottom, var(--neon-green), var(--neon-purple));
+    }
+    .card::after {
+      content: ''; position: absolute; inset: 0; background: linear-gradient(45deg, transparent, rgba(0,243,255,0.05), transparent);
+      transform: translateX(-100%); transition: transform 0.6s;
+    }
+    .card:hover::after { transform: translateX(100%); }
+
+    /* Experience Timeline */
+    .timeline { position: relative; padding-left: 20px; border-left: 2px solid var(--border); }
+    .timeline-item { 
+      margin-bottom: 2.5rem; position: relative; padding: 1rem;
+      background: rgba(12, 18, 28, 0.3); border-radius: 8px;
+      transition: var(--transition);
+    }
+    .timeline-item:hover { background: rgba(0, 243, 255, 0.05); border: 1px solid var(--border); transform: translateX(10px); }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -27px; top: 50%; transform: translateY(-50%);
+      width: 12px; height: 12px; background: var(--bg);
+      border: 2px solid var(--neon-cyan); border-radius: 50%;
+      box-shadow: var(--glow-cyan); transition: var(--transition);
+    }
+    .timeline-item:hover::before { background: var(--neon-cyan); box-shadow: 0 0 20px var(--neon-cyan); }
+    .timeline-date { 
+      color: var(--neon-purple); font-size: 0.85rem; margin-bottom: 0.3rem;
+      display: inline-block; padding: 2px 10px; background: rgba(176,38,255,0.1);
+      border-radius: 4px; border-left: 2px solid var(--neon-purple);
+    }
+    .timeline-role { font-size: 1.2rem; color: var(--text-primary); font-weight: bold; }
+    .timeline-company { color: var(--neon-green); margin-bottom: 0.5rem; }
+    .timeline-list { list-style: none; padding-left: 1rem; }
+    .timeline-list li { margin-bottom: 0.5rem; position: relative; padding-left: 20px; }
+    .timeline-list li::before { content: '>'; color: var(--neon-cyan); position: absolute; left: 0; animation: arrowPulse 2s infinite; }
+
+    /* Tags & Skills */
+    .tag-cloud { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 1rem; }
+    .tag {
+      background: rgba(0,243,255,0.1); border: 1px solid var(--neon-cyan);
+      padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 4px; 
+      transition: var(--transition); cursor: none; position: relative; overflow: hidden;
+    }
+    .tag::before {
+      content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0;
+      background: radial-gradient(circle, var(--neon-cyan), transparent);
+      transform: translate(-50%, -50%); transition: 0.5s; opacity: 0;
+    }
+    .tag:hover::before { width: 200%; height: 200%; opacity: 0.1; }
+    .tag:hover { background: var(--neon-cyan); color: #000; box-shadow: var(--glow-cyan); transform: scale(1.1); }
+
+    .skill-item { margin-bottom: 1rem; }
+    .skill-header { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+    .skill-bar { height: 6px; background: rgba(0,0,0,0.5); border-radius: 3px; overflow: hidden; border: 1px solid var(--border); }
+    .skill-progress {
+      height: 100%; background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      border-radius: 3px; transition: width 1s ease; position: relative; box-shadow: var(--glow-green);
+    }
+    .skill-progress::after {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    /* Publications */
+    .pub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .pub-link {
+      display: block; padding: 1.2rem; background: rgba(10,15,20,0.6); 
+      border: 1px solid var(--border); border-radius: 8px; 
+      transition: var(--transition); position: relative; overflow: hidden;
+    }
+    .pub-link::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+      transition: left 0.6s;
+    }
+    .pub-link:hover::before { left: 100%; }
+    .pub-link:hover { border-color: var(--neon-green); box-shadow: var(--glow-green); transform: translateX(5px); }
+
+    /* Terminal */
+    .terminal {
+      background: #000; padding: 1.5rem; border-radius: 8px; 
+      font-family: monospace; border: 1px solid var(--neon-green);
+      box-shadow: inset 0 0 20px rgba(0,255,65,0.1), 0 0 20px rgba(0,255,65,0.2);
+      position: relative; overflow: hidden;
+    }
+    .terminal-header { display: flex; gap: 8px; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+    .terminal-btn { width: 12px; height: 12px; border-radius: 50%; }
+    .terminal-btn.red { background: #ff5f56; box-shadow: 0 0 10px #ff5f56; }
+    .terminal-btn.yellow { background: #ffbd2e; box-shadow: 0 0 10px #ffbd2e; }
+    .terminal-btn.green { background: #27c93f; box-shadow: 0 0 10px #27c93f; }
+    .terminal-content { color: var(--neon-green); line-height: 1.8; }
+    .terminal-line { display: flex; gap: 10px; margin-bottom: 0.5rem; }
+    .terminal-prompt { color: var(--neon-cyan); }
+    .terminal-cursor {
+      display: inline-block; width: 8px; height: 1.2em; background: var(--neon-green);
+      animation: blink 1s infinite; margin-left: 5px;
+    }
+
+    /* Filter System */
+    .filter-bar {
+      display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem;
+      padding: 1rem; background: var(--bg-panel); border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .filter-btn {
+      padding: 0.5rem 1.5rem; background: transparent; border: 1px solid var(--border);
+      color: var(--text-primary); font-family: var(--font-body); border-radius: 4px;
+      transition: var(--transition); cursor: none;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--neon-cyan); color: #000; box-shadow: var(--glow-cyan);
+    }
+
+    /* Particles */
+    #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+
+    /* Footer */
+    footer {
+      text-align: center; padding: 3rem 0; border-top: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 0.8rem; position: relative;
+    }
+    footer::before {
+      content: ''; position: absolute; top: -1px; left: 0; width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+    }
+
+    /* Loading */
+    .loading-screen {
+      position: fixed; inset: 0; background: var(--bg); z-index: 9999;
+      display: flex; justify-content: center; align-items: center;
+      animation: fadeOut 1s ease 2s forwards;
+    }
+    .loading-text {
+      font-size: 3rem; font-family: var(--font-head);
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      position: relative;
+    }
+    .loading-text::after {
+      content: ''; position: absolute; bottom: -10px; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+      animation: loading 2s linear;
+    }
+
+    /* Back to Top */
+    .back-to-top {
+      position: fixed; bottom: 30px; right: 30px; width: 50px; height: 50px;
+      background: var(--bg-panel); border: 2px solid var(--neon-cyan);
+      border-radius: 50%; display: flex; justify-content: center; align-items: center;
+      color: var(--neon-cyan); font-size: 24px; cursor: none;
+      backdrop-filter: blur(8px); box-shadow: var(--glow-cyan);
+      opacity: 0; visibility: hidden; transition: var(--transition); z-index: 100;
+    }
+    .back-to-top.visible { opacity: 1; visibility: visible; }
+    .back-to-top:hover { background: var(--neon-cyan); color: #000; transform: translateY(-5px); }
+
+    /* Animations */
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes blinkText { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes glitchText {
+      0%, 100% { transform: translate(0); }
+      20% { transform: translate(-2px, 2px); }
+      40% { transform: translate(2px, -2px); }
+      60% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 1px); }
+    }
+    @keyframes slideDown { to { transform: translateY(0); } }
+    @keyframes pulseGlow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    @keyframes borderPulse { 0%, 100% { border-color: var(--border); } 50% { border-color: var(--neon-cyan); } }
+    @keyframes arrowPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    @keyframes loading { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+    @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+    @media(max-width: 600px) {
+      .hero-title { font-size: 2.5rem; }
+      h2 { font-size: 1.5rem; }
+      .grid { grid-template-columns: 1fr; }
+      .stats-dashboard { flex-direction: column; align-items: center; }
+      .stat-card { width: 100%; max-width: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Screen -->
+  <div class="loading-screen">
+    <div class="loading-text">ACCESSING SECURE TERMINAL...</div>
+  </div>
+
+  <!-- Custom Cursor -->
+  <div class="cursor-dot"></div>
+  <div class="cursor-outline"></div>
+
+  <!-- Background Effects -->
+  <canvas id="matrix"></canvas>
+  <canvas id="particle-canvas"></canvas>
+  <div class="scanlines"></div>
+  <div class="glitch-overlay"></div>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">O.BHD//cybereagle2001</div>
+    <button class="menu-toggle" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#certifications">Certs</a></li>
+      <li><a href="#awards">Awards</a></li>
+      <li><a href="#publications">Research</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
+  <header id="hero" class="container">
+    <h1 class="hero-title" data-text="Oussama Ben Hadj Dahman">Oussama Ben Hadj Dahman</h1>
+    <div class="hero-sub" id="typewriter"></div><span class="cursor"></span>
+    
+    <!-- ── HORIZONTAL STATS DASHBOARD (CORRECTED VALUES) ── -->
+    <div class="stats-dashboard">
+      <div class="stat-card">
+        <div class="stat-number" data-target="5">5</div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="15">15</div>
+        <div class="stat-label">Certifications</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="14">14</div>
+        <div class="stat-label">CTF Awards</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" data-target="8">8</div>
+        <div class="stat-label">Publications</div>
+      </div>
+    </div>
+
+    <div class="contact-bar">
+      <span>📍 Tunis, Tunisia</span>
+      <span>📧 <a href="mailto:benhadjdahmano@gmail.com">benhadjdahmano@gmail.com</a></span>
+      <span>🔗 <a href="https://www.linkedin.com/in/oussama-ben-hadj-dahman-0547a61b3/" target="_blank">LinkedIn</a></span>
+      <span>📱 +216 92229393</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- About Section -->
+    <section id="about">
+      <h2>System Profile</h2>
+      <div class="grid">
+        <div class="card">
+          <p>Cybersecurity Engineer with an academic foundation in Mathematics & Computer Science (University of Tunis) and a Cybersecurity Engineering degree (Tek-UP University). Certified in ISO 27001, Digital Forensics, Microsoft Security, Blue Team Operations, and Penetration Testing.</p>
+          <p>Proficient across security protocols, SOC management, SIEM architecture (Sentinel/Wazuh), and incident response. Combines deep technical expertise in Digital Forensics & Investigation with exceptional communication skills.</p>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">Core Competencies</h3>
+          <div class="skill-item">
+            <div class="skill-header"><span>Security Consulting </span><span>96%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="96"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header"><span>SOC Management</span><span>95%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="95"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header"><span>SIEM Engineering</span><span>90%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="90"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header"><span>Digital Forensics</span><span>88%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="88"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header"><span>Penetration Testing</span><span>85%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="85"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header"><span>Incident Response</span><span>92%</span></div>
+            <div class="skill-bar"><div class="skill-progress" style="width: 0%" data-width="92"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tag-cloud">
+        <span class="tag">SOC Management</span><span class="tag">SIEM Engineering</span>
+        <span class="tag">Digital Forensics</span><span class="tag">Penetration Testing</span>
+        <span class="tag">Incident Response</span><span class="tag">ISO 27001/27002</span>
+        <span class="tag">KQL/Defender</span><span class="tag">Malware Analysis</span>
+        <span class="tag">Threat Modeling</span><span class="tag">Wazuh</span><span class="tag">Azure Sentinel</span>
+      </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience">
+      <h2>Deployment History</h2>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="security">Security</button>
+        <button class="filter-btn" data-filter="teaching">Teaching</button>
+        <button class="filter-btn" data-filter="consulting">Consulting</button>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item" data-category="consulting">
+          <div class="timeline-date">October 2025 – Present</div>
+          <div class="timeline-role">Information Security Consultant</div>
+          <div class="timeline-company">TALAN</div>
+          <ul class="timeline-list">
+            <li>Web & Mobile Penetration Testing</li>
+            <li>Risk Assessment & ISO 27001 Documentation Review</li>
+            <li>ISO 27001 based auditing & compliance validation</li>
+          </ul>
+        </div>
+        <div class="timeline-item" data-category="security">
+          <div class="timeline-date">January 2024 – October 2025</div>
+          <div class="timeline-role">Cyber Security Expert</div>
+          <div class="timeline-company">Honoris United Universities</div>
+          <ul class="timeline-list">
+            <li>Designed & deployed SIEM solutions (Sentinel/Wazuh) for threat detection</li>
+            <li>Developed & optimized KQL queries for security analytics (Defender/Sentinel)</li>
+            <li>Incident Response, Forensic Engineering & corrective measure implementation</li>
+            <li>ISO 27001/27002 policy implementation & compliance auditing</li>
+            <li>Vulnerability assessments, internal appsec testing, firewall & network architecture reviews</li>
+          </ul>
+        </div>
+        <div class="timeline-item" data-category="security">
+          <div class="timeline-date">March 2023 – July 2023</div>
+          <div class="timeline-role">Graduation Internship</div>
+          <div class="timeline-company">RaiseGuard</div>
+          <ul class="timeline-list">
+            <li>Abnormal Behavior & Logs Analysis (Sentinel-Fortigate)</li>
+            <li>Data Pre-Processing, ML/DL Modeling for Threat Classification</li>
+          </ul>
+        </div>
+        <div class="timeline-item" data-category="teaching">
+          <div class="timeline-date">August 2022 – Present</div>
+          <div class="timeline-role">Cyber Security Instructor</div>
+          <div class="timeline-company">Securzy</div>
+          <ul class="timeline-list"><li>Research, Course Mentoring, Workshop Animation</li></ul>
+        </div>
+        <div class="timeline-item" data-category="teaching">
+          <div class="timeline-date">January 2022 – March 2024</div>
+          <div class="timeline-role">Cyber Security Instructor</div>
+          <div class="timeline-company">GoMyCode Tunisia</div>
+          <ul class="timeline-list">
+            <li>Student mentoring, weekly evaluations, program management</li>
+            <li>Delivered workshops: Firewall config, Windows hardening, Pentesting labs</li>
+          </ul>
+        </div>
+        <div class="timeline-item" data-category="security teaching">
+          <div class="timeline-date">October 2021 – July 2023</div>
+          <div class="timeline-role">Cyber Security Manager</div>
+          <div class="timeline-company">Engineers Spark FST</div>
+          <ul class="timeline-list">
+            <li>CTF Editor (HackMaze V0.1/0.2, Spyro, Spark CTF), Instructor, Board Member</li>
+            <li>Course preparation & workshop animation</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Education Section -->
+    <section id="education">
+      <h2>Academic Protocol</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>Cyber Security Engineer</h3>
+          <div class="timeline-date">Sep 2023 – Present</div>
+          <p>Tek-Up University</p>
+        </div>
+        <div class="card">
+          <h3>Master Path Cyber Security</h3>
+          <div class="timeline-date">Oct 2020 – Sep 2023</div>
+          <p>International Cyber Security Institute, UK</p>
+        </div>
+        <div class="card">
+          <h3>Bachelor in Mathematics & Computer Science</h3>
+          <div class="timeline-date">Oct 2020 – Jun 2023</div>
+          <p>Faculty Of Science Of Tunis</p>
+        </div>
+        <div class="card">
+          <h3>Baccalaureate</h3>
+          <div class="timeline-date">Sep 2016 – Jun 2020</div>
+          <p>Bardo High School</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Certifications Section -->
+    <section id="certifications">
+      <h2>Credential Registry</h2>
+      <p>Full certification portfolio with verification links available on <a href="#https://cybereagle2001.github.io/Licences-certifications/">personal blog (not updated)</a>.</p>
+      <div class="tag-cloud">
+        <span class="tag">CTIGA (Jan 2026)</span><span class="tag">CPPS (Dec 2025)</span>
+        <span class="tag">CCEP (Dec 2025)</span><span class="tag">CRTOM (Dec 2025)</span>
+        <span class="tag">ISO 27001 Lead Auditor (Nov 2025)</span><span class="tag">eJPT (Aug 2025)</span>
+        <span class="tag">Digital Forensics Essentials (May 2024)</span><span class="tag">CDFE (ICSI x CREST UK)</span>
+        <span class="tag">Junior Blue Team (Mar 2024)</span><span class="tag">Certified Cybersecurity CC (Mar 2024)</span>
+        <span class="tag">ISO 27001 Lead Implementer (Sep 2023)</span><span class="tag">SC-900 (May 2023)</span>
+        <span class="tag">AI-900 (May 2023)</span><span class="tag">CPT (Nov 2021)</span>
+      </div>
+    </section>
+
+    <!-- Awards Section -->
+    <section id="awards">
+      <h2>Achievement Log</h2>
+      <div class="grid">
+        <div class="card">
+          <div class="award-item"><span class="trophy">🥇</span><span>1st Place CyberDefenders – Feb 2024</span></div>
+          <div class="award-item"><span class="trophy">🥈</span><span>2nd Place Engineers Spark Community Ramadan CTF – 2024</span></div>
+          <div class="award-item"><span class="trophy">🥉</span><span>3rd Place SecuriCON CTF – 2025</span></div>
+          <div class="award-item"><span class="trophy">🏅</span><span>TOP 2% Worldwide – TryHackMe (2022)</span></div>
+          <div class="award-item"><span class="trophy">🌍</span><span>Finalist BLACK HAT AFRICA & MENA – 2023</span></div>
+          <div class="award-item"><span class="trophy">📊</span><span>Ranked 3rd Africa/MENA – Kaspersky (2020)</span></div>
+        </div>
+        <div class="card">
+          <div class="award-item"><span class="trophy">🏆</span><span>Finalist & 5th Place Hackfest – 2024</span></div>
+          <div class="award-item"><span class="trophy">🛡️</span><span>8th Place Securinets FRIENDLY GLOBAL – 2023</span></div>
+          <div class="award-item"><span class="trophy">🐛</span><span>8th Place PenpParty Bug Bounty – 2023</span></div>
+          <div class="award-item"><span class="trophy">💻</span><span>TOP 97 Active User Tunisia – GitHub (2022)</span></div>
+          <div class="award-item"><span class="trophy">🏅</span><span>12th Place Tunisia – CTFtime (2021)</span></div>
+          <div class="award-item"><span class="trophy">⭐</span><span>Member of the Month – Securinets (2020/2021)</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Publications & Research -->
+    <section id="publications">
+      <h2>Research & Publications</h2>
+      <div class="pub-grid">
+        <a href="#" class="pub-link">📄 I-S00N Leak Enigma</a>
+        <a href="#" class="pub-link">📄 Trisec Ransom</a>
+        <a href="#" class="pub-link">📄 Phishing Investigation: Unmasking the Hacker's Strategy</a>
+        <a href="#" class="pub-link">📕 Inside APT mindset: booklet</a>
+        <a href="#" class="pub-link">📄 Investigating Windows: Case Scenario</a>
+        <a href="#" class="pub-link">📄 Reverse-Shell-Theory-For-Beginners</a>
+        <a href="#" class="pub-link">📄 What is ransomware??</a>
+        <a href="#" class="pub-link">🔬 Abnormal Behavior Detection (KNN+CNN Grad Project)</a>
+      </div>
+      <h2 style="margin-top: 2rem;">Conferences & Workshops (Last 12 Months)</h2>
+      <div class="tag-cloud">
+        <span class="tag">Threat Modeling - SecuriCON 2025</span>
+        <span class="tag">ML in IoT Anomaly Detection - IoT SPARK 2024</span>
+        <span class="tag">Int. Workshop Cyber Security & Forensics</span>
+        <span class="tag">Judge - WIE ACT by IEEE Tunisia</span>
+        <span class="tag">Cyber GRID Webinar</span>
+        <span class="tag">WIE DAY AI in Cybersecurity</span>
+        <span class="tag">CyberTek: the APT mindset</span>
+        <span class="tag">Hackfest: AI Abnormal Behavior Detection</span>
+        <span class="tag">Judge - Code Red: Worm Era</span>
+        <span class="tag">Forensics Engineering: The Art of Investigation</span>
+        <span class="tag">Judge - Hackathon 6.0 ATLAS Future Leaders</span>
+        <span class="tag">February Security series IEEE FST</span>
+      </div>
+    </section>
+
+    <!-- Contact with Terminal -->
+    <section id="contact">
+      <h2>Establish Uplink</h2>
+      <div style="max-width: 600px; margin: 0 auto;">
+        <div class="terminal">
+          <div class="terminal-header">
+            <span class="terminal-btn red"></span>
+            <span class="terminal-btn yellow"></span>
+            <span class="terminal-btn green"></span>
+          </div>
+          <div class="terminal-content">
+            <div class="terminal-line"><span class="terminal-prompt">user@obhd:~$</span><span>./contact --init</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">></span><span>Initializing secure connection...</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">></span><span>Status: ONLINE</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">user@obhd:~$</span><span>cat contact_info.enc</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">></span><span>Email: benhadjdahmano@gmail.com</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">></span><span>Phone: +216 92229393</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">></span><span>Location: Tunis, Tunisia</span></div>
+            <div class="terminal-line"><span class="terminal-prompt">user@obhd:~$</span><span>echo "Ready for secure communication"</span><span class="terminal-cursor"></span></div>
+          </div>
+        </div>
+        <div class="card" style="text-align: center; margin-top: 2rem;">
+          <p>Ready to secure your infrastructure, conduct advanced threat analysis, or collaborate on cybersecurity research?</p>
+          <p style="margin: 1.5rem 0; font-size: 1.1rem;">
+            📧 <a href="mailto:benhadjdahmano@gmail.com">benhadjdahmano@gmail.com</a><br>
+            🔗 <a href="#https://www.linkedin.com/in/oussama-ben-hadj-dahman-0547a61b3/">LinkedIn Profile</a> | 📱 +216 92229393
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Back to Top Button -->
+  <div class="back-to-top" id="backToTop">↑</div>
+
+  <footer>
+    <p>&copy; 2024-2026 Oussama Ben Hadj Dahman. Encrypted & Secured. Built with Cyberpunk Core.</p>
+  </footer>
+
+  <script>
+    // Matrix Rain Effect
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    resizeCanvas();
+    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const fontSize = 14;
+    let columns = Math.floor(canvas.width / fontSize);
+    let drops = Array(columns).fill(1);
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(5, 5, 8, 0.15)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00ff41';
+      ctx.font = fontSize + 'px monospace';
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        const x = i * fontSize;
+        const y = drops[i] * fontSize;
+        ctx.fillText(text, x, y);
+        ctx.fillStyle = i % 3 === 0 ? '#00ff41' : '#00f3ff';
+        if (y > canvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    setInterval(drawMatrix, 45);
+    window.addEventListener('resize', () => { resizeCanvas(); columns = Math.floor(canvas.width / fontSize); drops = Array(columns).fill(1); });
+
+    // Particle Effect
+    const particleCanvas = document.getElementById('particle-canvas');
+    const pCtx = particleCanvas.getContext('2d');
+    let particles = [];
+    function resizeParticleCanvas() { particleCanvas.width = window.innerWidth; particleCanvas.height = window.innerHeight; initParticles(); }
+    function initParticles() {
+      particles = [];
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: Math.random() * particleCanvas.width, y: Math.random() * particleCanvas.height,
+          vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, size: Math.random() * 3
+        });
+      }
+    }
+    function drawParticles() {
+      pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+      particles.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > particleCanvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > particleCanvas.height) p.vy *= -1;
+        pCtx.beginPath(); pCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        pCtx.fillStyle = `rgba(0, 243, 255, ${Math.random() * 0.3})`; pCtx.fill();
+        particles.forEach(p2 => {
+          const dx = p.x - p2.x, dy = p.y - p2.y, dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 100) {
+            pCtx.beginPath(); pCtx.moveTo(p.x, p.y); pCtx.lineTo(p2.x, p2.y);
+            pCtx.strokeStyle = `rgba(0, 243, 255, ${0.1 * (1 - dist/100)})`; pCtx.lineWidth = 0.5; pCtx.stroke();
+          }
+        });
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    resizeParticleCanvas(); initParticles(); drawParticles();
+    window.addEventListener('resize', resizeParticleCanvas);
+
+    // Typewriter Effect
+    const phrases = ["Cybersecurity Engineer","SOC & SIEM Architect","Digital Forensics Expert","ISO 27001 Lead Implementer & Auditor","Blue Team & Penetration Tester"];
+    let phraseIndex = 0, charIndex = 0, isDeleting = false;
+    const typeTarget = document.getElementById('typewriter');
+    function type() {
+      const current = phrases[phraseIndex];
+      typeTarget.textContent = isDeleting ? current.substring(0, charIndex - 1) : current.substring(0, charIndex + 1);
+      charIndex += isDeleting ? -1 : 1;
+      let speed = isDeleting ? 40 : 80;
+      if (!isDeleting && charIndex === current.length) { speed = 1500; isDeleting = true; }
+      else if (isDeleting && charIndex === 0) { isDeleting = false; phraseIndex = (phraseIndex + 1) % phrases.length; speed = 400; }
+      setTimeout(type, speed);
+    }
+    type();
+
+    // Scroll Animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          if (entry.target.id === 'about') {
+            document.querySelectorAll('.skill-progress').forEach(bar => {
+              const width = bar.dataset.width;
+              setTimeout(() => bar.style.width = width + '%', 300);
+            });
+          }
+          if (entry.target.id === 'hero') {
+            document.querySelectorAll('.stat-number').forEach(stat => {
+              const target = parseInt(stat.dataset.target);
+              let current = 0;
+              const increment = target / 30;
+              const timer = setInterval(() => {
+                current += increment;
+                if (current >= target) { stat.textContent = target + '+'; clearInterval(timer); }
+                else { stat.textContent = Math.floor(current); }
+              }, 50);
+            });
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+
+    // Custom Cursor
+    const cursorDot = document.querySelector('.cursor-dot');
+    const cursorOutline = document.querySelector('.cursor-outline');
+    document.addEventListener('mousemove', (e) => {
+      cursorDot.style.left = e.clientX + 'px'; cursorDot.style.top = e.clientY + 'px';
+      setTimeout(() => { cursorOutline.style.left = e.clientX - 16 + 'px'; cursorOutline.style.top = e.clientY - 16 + 'px'; }, 50);
+    });
+    document.querySelectorAll('a, button, .card, .tag, .filter-btn').forEach(el => {
+      el.addEventListener('mouseenter', () => cursorOutline.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursorOutline.classList.remove('hover'));
+    });
+
+    // Filter System
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        timelineItems.forEach(item => {
+          if (filter === 'all' || item.dataset.category.includes(filter)) item.style.display = 'block';
+          else item.style.display = 'none';
+        });
+      });
+    });
+
+    // Mobile Menu
+    const menuToggle = document.querySelector('.menu-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    menuToggle.addEventListener('click', () => { navLinks.classList.toggle('active'); menuToggle.classList.toggle('active'); });
+
+    // Back to Top
+    const backToTop = document.getElementById('backToTop');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 500) backToTop.classList.add('visible');
+      else backToTop.classList.remove('visible');
+    });
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) { target.scrollIntoView({ behavior: 'smooth' }); navLinks.classList.remove('active'); }
+      });
+    });
+
+
+    // Scroll Animations - FIXED STAT COUNTERS
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      
+      // Animate skill bars
+      if (entry.target.id === 'about') {
+        document.querySelectorAll('.skill-progress').forEach(bar => {
+          const width = bar.dataset.width;
+          setTimeout(() => bar.style.width = width + '%', 300);
+        });
+      }
+      
+      // ── FAST SPIN-UP STAT COUNTERS ──
+      if (entry.target.id === 'hero') {
+        document.querySelectorAll('.stat-number').forEach(stat => {
+          const target = parseInt(stat.dataset.target);
+          const duration = 800; // 800ms total animation
+          const startTime = performance.now();
+          
+          function animate(currentTime) {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            // Ease-out cubic: starts fast, slows at end (spin-up effect)
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(target * eased);
+            
+            stat.textContent = current + (progress === 1 ? '+' : '');
+            
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            }
+          }
+          requestAnimationFrame(animate);
+        });
+      }
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('section').forEach(sec => observer.observe(sec));
+
+    // Glitch hover effect
+    const heroTitle = document.querySelector('.hero-title');
+    heroTitle.addEventListener('mouseenter', () => heroTitle.style.animation = 'glitchText 0.3s infinite');
+    heroTitle.addEventListener('mouseleave', () => heroTitle.style.animation = 'glitchText 3s infinite');
+  </script>
+</body>
+</html>
